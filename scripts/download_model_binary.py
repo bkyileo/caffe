@@ -3,10 +3,9 @@ import os
 import sys
 import time
 import yaml
+import urllib
 import hashlib
 import argparse
-
-from six.moves import urllib
 
 required_keys = ['caffemodel', 'caffemodel_url', 'sha1']
 
@@ -70,7 +69,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # Download and verify model.
-    urllib.request.urlretrieve(
+    urllib.urlretrieve(
         frontmatter['caffemodel_url'], model_filename, reporthook)
     if not model_checks_out():
         print('ERROR: model did not download correctly! Run this again.')

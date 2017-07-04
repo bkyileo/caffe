@@ -3,10 +3,6 @@
 
 #include <cstdlib>
 
-#ifdef USE_MKL
-  #include "mkl.h"
-#endif
-
 #include "caffe/common.hpp"
 
 namespace caffe {
@@ -24,11 +20,7 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
     return;
   }
 #endif
-#ifdef USE_MKL
-  *ptr = mkl_malloc(size ? size:1, 64);
-#else
   *ptr = malloc(size);
-#endif
   *use_cuda = false;
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
@@ -40,11 +32,7 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
     return;
   }
 #endif
-#ifdef USE_MKL
-  mkl_free(ptr);
-#else
   free(ptr);
-#endif
 }
 
 
@@ -56,8 +44,14 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
  */
 class SyncedMemory {
  public:
-  SyncedMemory();
-  explicit SyncedMemory(size_t size);
+  SyncedMemory()
+      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
+        own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
+        gpu_device_(-1) {}
+  explicit SyncedMemory(size_t size)
+      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
+        own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
+        gpu_device_(-1) {}
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
@@ -74,8 +68,6 @@ class SyncedMemory {
 #endif
 
  private:
-  void check_device();
-
   void to_cpu();
   void to_gpu();
   void* cpu_ptr_;
@@ -85,7 +77,7 @@ class SyncedMemory {
   bool own_cpu_data_;
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
-  int device_;
+  int gpu_device_;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

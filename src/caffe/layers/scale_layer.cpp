@@ -56,17 +56,9 @@ void ScaleLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     bias_bottom_vec_.resize(1);
     bias_bottom_vec_[0] = bottom[0];
     bias_layer_->SetUp(bias_bottom_vec_, top);
-    if (this->blobs_.size() + bottom.size() < 3) {
-      // case: blobs.size == 1 && bottom.size == 1
-      // or blobs.size == 0 && bottom.size == 2
-      bias_param_id_ = this->blobs_.size();
-      this->blobs_.resize(bias_param_id_ + 1);
-      this->blobs_[bias_param_id_] = bias_layer_->blobs()[0];
-    } else {
-      // bias param already initialized
-      bias_param_id_ = this->blobs_.size() - 1;
-      bias_layer_->blobs()[0] = this->blobs_[bias_param_id_];
-    }
+    bias_param_id_ = this->blobs_.size();
+    this->blobs_.resize(bias_param_id_ + 1);
+    this->blobs_[bias_param_id_] = bias_layer_->blobs()[0];
     bias_propagate_down_.resize(1, false);
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
@@ -97,7 +89,10 @@ void ScaleLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   scale_dim_ = scale->count();
   inner_dim_ = bottom[0]->count(axis_ + scale->num_axes());
   if (bottom[0] == top[0]) {  // in-place computation
-    temp_.ReshapeLike(*bottom[0]);
+    const bool scale_param = (bottom.size() == 1);
+    if (!scale_param || (scale_param && this->param_propagate_down_[0])) {
+      temp_.ReshapeLike(*bottom[0]);
+    }
   } else {
     top[0]->ReshapeLike(*bottom[0]);
   }

@@ -36,11 +36,11 @@ classdef Solver < handle
         self.test_nets(n) = caffe.Net(self.attributes.hNet_test_nets(n));
       end
     end
-    function delete (self)
-      caffe_('delete_solver', self.hSolver_self);
-    end
     function iter = iter(self)
       iter = caffe_('solver_get_iter', self.hSolver_self);
+    end
+    function max_iter = max_iter(self)
+      max_iter = caffe_('solver_get_max_iter', self.hSolver_self);
     end
     function restore(self, snapshot_filename)
       CHECK(ischar(snapshot_filename), 'snapshot_filename must be a string');

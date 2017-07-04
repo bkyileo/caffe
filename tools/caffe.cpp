@@ -174,6 +174,7 @@ caffe::SolverAction::Enum GetRequestedAction(
     return caffe::SolverAction::NONE;
   }
   LOG(FATAL) << "Invalid signal effect \""<< flag_value << "\" was specified";
+  return caffe::SolverAction::NONE;
 }
 
 // Train / Finetune a model.
@@ -195,7 +196,6 @@ int train() {
   // If the gpus flag is not provided, allow the mode and device to be set
   // in the solver prototxt.
   if (FLAGS_gpu.size() == 0
-      && solver_param.has_solver_mode()
       && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU) {
       if (solver_param.has_device_id()) {
           FLAGS_gpu = "" +
@@ -245,15 +245,11 @@ int train() {
     CopyLayers(solver.get(), FLAGS_weights);
   }
 
-  LOG(INFO) << "Starting Optimization";
   if (gpus.size() > 1) {
-#ifdef USE_NCCL
-    caffe::NCCL<float> nccl(solver);
-    nccl.Run(gpus, FLAGS_snapshot.size() > 0 ? FLAGS_snapshot.c_str() : NULL);
-#else
-    LOG(FATAL) << "Multi-GPU execution not available - rebuild with USE_NCCL";
-#endif
+    caffe::P2PSync<float> sync(solver, NULL, solver->param());
+    sync.Run(gpus);
   } else {
+    LOG(INFO) << "Starting Optimization";
     solver->Solve();
   }
   LOG(INFO) << "Optimization Done.";

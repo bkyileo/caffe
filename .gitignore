@@ -47,9 +47,6 @@
 # PyCharm files
 .idea
 
-# Visual Studio Code files
-.vscode
-
 # OSX dir files
 .DS_Store
 
@@ -73,6 +70,7 @@ models/*
 
 # build, distribute, and bins (+ python proto bindings)
 build
+windows/packages
 .build_debug/*
 .build_release/*
 distribute/*
@@ -84,7 +82,6 @@ cmake_build
 
 # Generated documentation
 docs/_site
-docs/_includes
 docs/gathered
 _site
 doxygen
@@ -97,3 +94,11 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
+
+#Visual Studio files
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.pdb
+*.props
